@@ -60,6 +60,7 @@ struct ActivityRecommendCard: View {
         .accessibilityLabel(
             "Rank \(rank), \(recommend.activity.title), score \(recommend.score) out of 100"
         )
+        .accessibilityIdentifier("activity.card.\(rank)")
     }
 
     private var rankBadge: some View {

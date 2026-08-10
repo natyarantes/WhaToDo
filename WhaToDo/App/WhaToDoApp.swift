@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct WhaToDoApp: App {
-    private let container = AppContainer.live
+    private let container = AppContainer.current
 
     var body: some Scene {
         WindowGroup {

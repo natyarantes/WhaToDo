@@ -75,6 +75,7 @@ struct CitySearchView: View {
                 } label: {
                     CityRow(city: city)
                 }
+                .accessibilityIdentifier("city.row.\(city.id)")
             }
             .listStyle(.plain)
 

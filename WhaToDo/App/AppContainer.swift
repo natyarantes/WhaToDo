@@ -22,9 +22,25 @@ struct AppContainer {
         )
     }()
 
-    static let preview = AppContainer(
-        cityRepository: PreviewCityRepository(),
-        weatherRepository: PreviewWeatherRepository(),
-        rankingService: PreviewActivityRankingService()
+    static let preview = AppContainer(cityRepository: PreviewCityRepository(),
+                                      weatherRepository: PreviewWeatherRepository(),
+                                      rankingService: PreviewActivityRankingService()
     )
+    
+    static let uiTesting = AppContainer(cityRepository: UITestCityRepository(),
+                                        weatherRepository: UITestWeatherRepository(),
+                                        rankingService: DefaultActivityRankingService()
+    )
+    
+    static var current: AppContainer {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains(
+            "-ui-testing"
+        ) {
+            return .uiTesting
+        }
+        #endif
+
+        return .live
+    }
 }

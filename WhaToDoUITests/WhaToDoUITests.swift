@@ -7,37 +7,158 @@
 
 import XCTest
 
+@MainActor
 final class WhaToDoUITests: XCTestCase {
-
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+    }
+    
+    private func search(for city: String, in app: XCUIApplication) {
+        let searchField = app.searchFields.firstMatch
+        
+        XCTAssertTrue(
+            searchField.waitForExistence(timeout: 3)
+        )
+        
+        searchField.tap()
+        searchField.typeText(city)
+        
+        let searchButton = app.keyboards.buttons["Search"]
+        
+        XCTAssertTrue(
+            searchButton.waitForExistence(timeout: 2)
+        )
+        
+        searchButton.tap()
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testSearchCityAndShowRecommendations() throws {
         let app = XCUIApplication()
+
+        app.launchArguments = [
+            "-ui-testing"
+        ]
+
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
-    }
+        let initialMessage = app.staticTexts[
+            "Find your next activity"
+        ]
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+        XCTAssertTrue(
+            initialMessage.waitForExistence(timeout: 3)
+        )
+
+        let searchField = app.searchFields.firstMatch
+
+        XCTAssertTrue(
+            searchField.waitForExistence(timeout: 3)
+        )
+
+        searchField.tap()
+        searchField.typeText("Oslo")
+
+        let searchButton =
+            app.keyboards.buttons["Search"]
+
+        XCTAssertTrue(
+            searchButton.waitForExistence(timeout: 2)
+        )
+
+        searchButton.tap()
+
+        let cityRow = app.buttons["city.row.1"]
+
+        XCTAssertTrue(
+            cityRow.waitForExistence(timeout: 3)
+        )
+
+        cityRow.tap()
+
+        let navigationBar =
+            app.navigationBars["Oslo"]
+
+        XCTAssertTrue(
+            navigationBar.waitForExistence(timeout: 3)
+        )
+
+        let firstActivityCard = app.descendants(
+            matching: .any
+        )["activity.card.1"]
+
+        XCTAssertTrue(
+            firstActivityCard.waitForExistence(timeout: 3)
+        )
+
+        XCTAssertTrue(
+            firstActivityCard.label.contains("Skiing")
+        )
+    }
+    
+    func testSearchWithoutResultsShowsEmptyState() {
+        let app = XCUIApplication()
+
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-empty"
+        ]
+
+        app.launch()
+
+        search(for: "Unknown", in: app)
+
+        let emptyState = app.staticTexts
+            .matching(
+                NSPredicate(
+                    format: "label CONTAINS[c] %@",
+                    "No Results"
+                )
+            )
+            .firstMatch
+
+        XCTAssertTrue(
+            emptyState.waitForExistence(timeout: 3)
+        )
+    }
+    
+    func testSearchFailureShowsErrorAndRetryButton() {
+        let app = XCUIApplication()
+
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-search-error"
+        ]
+
+        app.launch()
+
+        search(for: "Oslo", in: app)
+
+        let errorTitle = app.staticTexts[
+            "Unable to search"
+        ]
+
+        XCTAssertTrue(
+            errorTitle.waitForExistence(timeout: 3)
+        )
+
+        let retryButton = app.buttons["Try again"]
+
+        XCTAssertTrue(
+            retryButton.waitForExistence(timeout: 3)
+        )
+
+        let offlineMessage = app.staticTexts
+            .matching(
+                NSPredicate(
+                    format: "label CONTAINS[c] %@",
+                    "offline"
+                )
+            )
+            .firstMatch
+
+        XCTAssertTrue(
+            offlineMessage.waitForExistence(timeout: 3)
+        )
     }
 }
+
